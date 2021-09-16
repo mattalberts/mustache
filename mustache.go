@@ -508,6 +508,16 @@ Outer:
 				v = av.Elem()
 			case reflect.Interface:
 				v = av.Elem()
+			case reflect.Array, reflect.Slice:
+				idx, err := strconv.Atoi(name)
+				if err != nil {
+					return reflect.Value{}, fmt.Errorf("non-integer slice index %q", name)
+				}
+				ret := av.Index(idx)
+				if ret.IsValid() {
+					return ret, nil
+				}
+				continue Outer
 			case reflect.Struct:
 				ret := av.FieldByName(name)
 				if ret.IsValid() {
@@ -541,7 +551,7 @@ func isEmpty(v reflect.Value) bool {
 		return true
 	}
 	switch val := valueInd; val.Kind() {
-	case reflect.Array, reflect.Slice:
+	case reflect.Array, reflect.Slice, reflect.Map:
 		return val.Len() == 0
 	case reflect.String:
 		return len(strings.TrimSpace(val.String())) == 0

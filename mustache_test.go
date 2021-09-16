@@ -151,6 +151,13 @@ var tests = []Test{
 	{`"{{#list}}({{.}}){{/list}}"`, map[string]interface{}{"list": []int{1, 2, 3, 4, 5}}, "\"(1)(2)(3)(4)(5)\"", nil},
 	{`"{{#list}}({{.}}){{/list}}"`, map[string]interface{}{"list": []float64{1.10, 2.20, 3.30, 4.40, 5.50}}, "\"(1.1)(2.2)(3.3)(4.4)(5.5)\"", nil},
 
+	// conditional implicit iterator tests
+	{`"{{#list.0}}items{{/list.0}}"`, map[string]interface{}{"list": []string{"a", "b", "c"}}, "\"items\"", nil},
+	{`"{{^list.0}}empty{{/list.0}}"`, map[string]interface{}{}, "\"empty\"", nil},
+	{`"{{#list.0}}{{#list}}({{.}}){{/list}}{{/list.0}}"`, map[string]interface{}{"list": []string{"a", "b", "c", "d", "e"}}, "\"(a)(b)(c)(d)(e)\"", nil},
+	{`"{{#list.0}}{{#list}}({{.}}){{/list}}{{/list.0}}"`, map[string]interface{}{"list": []int{1, 2, 3, 4, 5}}, "\"(1)(2)(3)(4)(5)\"", nil},
+	{`"{{#list.0}}{{#list}}({{.}}){{/list}}{{/list.0}}"`, map[string]interface{}{"list": []float64{1.10, 2.20, 3.30, 4.40, 5.50}}, "\"(1.1)(2.2)(3.3)(4.4)(5.5)\"", nil},
+
 	//inverted section tests
 	{`{{a}}{{^b}}b{{/b}}{{c}}`, map[string]interface{}{"a": "a", "b": false, "c": "c"}, "abc", nil},
 	{`{{^a}}b{{/a}}`, map[string]interface{}{"a": false}, "b", nil},
@@ -356,6 +363,8 @@ var malformed = []Test{
 	{`{{`, nil, "", fmt.Errorf("line 1: unmatched open tag")},
 	//invalid syntax - https://github.com/hoisie/mustache/issues/10
 	{`{{#a}}{{#b}}{{/a}}{{/b}}}`, map[string]interface{}{}, "", fmt.Errorf("line 1: interleaved closing tag: a")},
+	// non-integer index
+	{`"{{#list.a}}{{#list}}({{.}}){{/list}}{{/list.a}}"`, map[string]interface{}{"list": []string{"a", "b", "c", "d", "e"}}, "", fmt.Errorf("non-integer slice index \"a\"")},
 }
 
 func TestMalformed(t *testing.T) {
